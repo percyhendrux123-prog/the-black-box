@@ -1,0 +1,431 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Page shell ───────────────────────────────────────────────── */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: #050505;
+  min-height: 100vh;
+  padding: 40px 20px;
+  font-family: "Inter", system-ui, sans-serif;
+  color: #f5f1e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+/* ── FRAME ───────────────────────────────────────────────────── */
+.tbb-frame {
+  width: 100%;
+  max-width: 1280px;
+  aspect-ratio: 16 / 10;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #1a1a1a;
+  isolation: isolate;
+  background: radial-gradient(
+    120% 90% at 50% 10%,
+    #141215 0%,
+    #0c0b0d 30%,
+    #050506 65%,
+    #020203 100%
+  );
+  transition: background 0.5s ease;
+}
+
+/* ── LIGHTING ────────────────────────────────────────────────── */
+.tbb-lights {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.5s ease, filter 0.5s ease;
+  background: radial-gradient(
+      ellipse 80% 45% at 50% 16%,
+      rgba(255, 240, 220, 0.11) 0%,
+      rgba(255, 240, 220, 0.07) 18%,
+      rgba(255, 240, 220, 0.035) 36%,
+      rgba(255, 240, 220, 0.012) 52%,
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 38% 52% at 50% 54%,
+      rgba(255, 238, 215, 0.06) 0%,
+      rgba(255, 238, 215, 0.024) 35%,
+      transparent 70%
+    );
+}
+
+.tbb-frame[data-mode="terminal"] .tbb-lights {
+  opacity: 0.72;
+  filter: hue-rotate(-8deg) saturate(0.85);
+}
+
+/* ── FILM GRAIN ──────────────────────────────────────────────── */
+.tbb-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 240px 240px;
+  transition: opacity 0.5s ease;
+}
+.tbb-frame[data-mode="terminal"] .tbb-grain {
+  opacity: 0.06;
+}
+
+/* ── GRID (Terminal raster) ──────────────────────────────────── */
+.tbb-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  background-image: linear-gradient(
+      90deg,
+      rgba(245, 241, 232, 0.055) 1px,
+      transparent 1px
+    ),
+    linear-gradient(0deg, rgba(245, 241, 232, 0.045) 1px, transparent 1px);
+  background-size: 8.333% 100%, 100% 60px;
+  -webkit-mask-image: radial-gradient(
+    ellipse 75% 78% at 50% 50%,
+    #000 35%,
+    rgba(0, 0, 0, 0.55) 70%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 75% 78% at 50% 50%,
+    #000 35%,
+    rgba(0, 0, 0, 0.55) 70%,
+    transparent 100%
+  );
+}
+.tbb-frame[data-mode="terminal"] .tbb-grid {
+  opacity: 1;
+}
+
+/* ── HUD common ──────────────────────────────────────────────── */
+.tbb-hud {
+  position: absolute;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.32);
+  z-index: 5;
+}
+.tbb-hud .num {
+  color: rgba(245, 241, 232, 0.72);
+}
+
+/* ── BRAND BUG ───────────────────────────────────────────────── */
+.tbb-brand {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  z-index: 5;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  line-height: 1;
+}
+.tbb-brand .mark {
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+  color: rgba(245, 241, 232, 0.7);
+  transition: font-family 0.3s ease, font-weight 0.3s ease,
+    letter-spacing 0.3s ease, font-size 0.3s ease;
+}
+.tbb-brand .sep {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: rgba(245, 241, 232, 0.28);
+}
+.tbb-brand .scn {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.45);
+}
+.tbb-brand .scn .num {
+  color: rgba(245, 241, 232, 0.72);
+}
+.tbb-frame[data-mode="terminal"] .tbb-brand .mark {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+  letter-spacing: 0;
+  font-size: 15px;
+}
+
+/* ── TOGGLE ──────────────────────────────────────────────────── */
+.tbb-toggle {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(201, 169, 97, 0.22);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  z-index: 5;
+}
+.tbb-toggle button {
+  background: transparent;
+  color: rgba(245, 241, 232, 0.6);
+  border: none;
+  padding: 7px 16px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tbb-toggle button.on {
+  background: #c9a961;
+  color: #0a0a0a;
+}
+
+/* ── STAGE / OUTPUT CARD ─────────────────────────────────────── */
+.tbb-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 76%;
+  aspect-ratio: 4 / 5;
+  z-index: 4;
+}
+.tbb-canvas-card {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 80% at 50% 35%,
+    #f3f1ea 0%,
+    #e8e6dd 60%,
+    #d6d4cb 100%
+  );
+  border-radius: 14px;
+  box-shadow: 0 100px 120px -30px rgba(0, 0, 0, 0.72),
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    inset 0 0 100px rgba(255, 240, 220, 0.05);
+  padding: 44px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #0a0a0a;
+}
+.tbb-eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+}
+.tbb-headline {
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: clamp(44px, 5.2vw, 76px);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: #0a0a0a;
+  transition: font-size 0.3s ease;
+}
+.tbb-frame[data-mode="terminal"] .tbb-headline {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+  letter-spacing: 0;
+  font-size: clamp(32px, 3.4vw, 50px);
+}
+.tbb-headline .accent {
+  color: #c9a961;
+}
+.tbb-caption {
+  margin-top: 14px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+}
+.tbb-canvas-foot {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ── TIMECODE RAIL ───────────────────────────────────────────── */
+.tbb-rail {
+  position: absolute;
+  right: 32px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 62%;
+  width: 130px;
+  pointer-events: none;
+  z-index: 5;
+}
+.tbb-rail .axis {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+.tbb-rail .tick {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.32);
+  padding-right: 16px;
+  text-align: right;
+  width: 100%;
+  line-height: 1.4;
+}
+.tbb-rail .tick::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 8px;
+  height: 1px;
+  background: rgba(245, 241, 232, 0.32);
+  transform: translateY(-50%);
+}
+.tbb-rail .tick.on {
+  color: #f5f1e8;
+}
+.tbb-rail .tick.on::after {
+  background: #f5f1e8;
+  width: 16px;
+}
+.tbb-rail .tick .label {
+  display: block;
+  font-size: 8px;
+  color: rgba(245, 241, 232, 0.28);
+  margin-top: 3px;
+  letter-spacing: 0.16em;
+}
+.tbb-rail .tick.on .label {
+  color: rgba(245, 241, 232, 0.7);
+}
+.tbb-play {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 22px;
+  height: 1px;
+  background: #ff5436;
+  box-shadow: 0 0 12px rgba(255, 84, 54, 0.8);
+  transform: translateY(-50%);
+}
+
+/* ── COMMAND BAR ─────────────────────────────────────────────── */
+.tbb-cmd {
+  position: absolute;
+  bottom: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 58%;
+  background: rgba(20, 18, 20, 0.5);
+  border: 1px solid rgba(201, 169, 97, 0.28);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+  z-index: 5;
+  transition: background 0.25s ease, border-color 0.25s ease,
+    transform 0.25s ease;
+}
+.tbb-cmd .arrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  color: rgba(201, 169, 97, 0.9);
+}
+.tbb-cmd .text {
+  flex: 1;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  color: rgba(245, 241, 232, 0.55);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+.tbb-cmd .text::placeholder {
+  color: rgba(245, 241, 232, 0.45);
+}
+.tbb-cmd .fire {
+  background: #c9a961;
+  color: #0a0a0a;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+.tbb-cmd .fire:hover {
+  background: #d4b46d;
+  transform: scale(1.03);
+}
+.tbb-cmd .fire:active {
+  transform: scale(0.98);
+}
+
+/* ── MARQUEE WHISPER ─────────────────────────────────────────── */
+.tbb-marquee {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: "Inter", sans-serif;
+  font-size: clamp(120px, 15vw, 220px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: rgba(255, 255, 255, 0.012);
+  text-transform: uppercase;
+  user-select: none;
+  mix-blend-mode: screen;
+  z-index: 2;
+  text-align: center;
+}
