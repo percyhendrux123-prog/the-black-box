@@ -1,0 +1,14 @@
+--- a/package.json
++++ b/package.json
+@@ -X,Y +X,Y @@
+   "dependencies": {
++    "@google/generative-ai": "^0.21.0",
+     "react": "^18.3.1",
+     "react-dom": "^18.3.1"
+   },
+   "devDependencies": {
++    "@netlify/functions": "^2.8.1",
+     "@types/react": "^18.3.3",
+     "@types/react-dom": "^18.3.0",
+     ...
+   }

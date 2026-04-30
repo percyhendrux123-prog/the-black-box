@@ -1,31 +1,72 @@
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 
-interface CommandBarProps {
-  onFire?: (prompt: string) => void;
-}
+export type GeneratedCopy = {
+  headline: string;
+  caption: string;
+  eyebrow: string;
+};
 
-/**
- * Bottom command bar — glass-blur input with FIRE button.
- *
- * v1: FIRE doesn't fire anything. Hover/click animate the button (scale + warm tint).
- * The Gemini wire is the next task.
- */
-export default function CommandBar({ onFire }: CommandBarProps) {
+type Props = {
+  onResult: (copy: GeneratedCopy) => void;
+  onError: (msg: string) => void;
+  onLoadingChange: (loading: boolean) => void;
+  loading: boolean;
+};
+
+export default function CommandBar({
+  onResult,
+  onError,
+  onLoadingChange,
+  loading,
+}: Props) {
   const [value, setValue] = useState("");
 
-  const fire = () => {
-    if (onFire) onFire(value);
-    // No-op for v1 otherwise.
+  const fire = async () => {
+    const prompt = value.trim();
+    if (!prompt || loading) return;
+
+    onLoadingChange(true);
+    onError("");
+
+    try {
+      const res = await fetch("/.netlify/functions/generate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        onError(data?.error || `Request failed (${res.status})`);
+        return;
+      }
+
+      if (!data?.headline || !data?.caption || !data?.eyebrow) {
+        onError("Bad response shape");
+        return;
+      }
+
+      onResult({
+        headline: String(data.headline),
+        caption: String(data.caption),
+        eyebrow: String(data.eyebrow),
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      onError(msg);
+    } finally {
+      onLoadingChange(false);
+    }
+  };
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    fire();
   };
 
   return (
-    <form
-      className="tbb-cmd"
-      onSubmit={(e) => {
-        e.preventDefault();
-        fire();
-      }}
-    >
+    <form className="tbb-cmd" onSubmit={onSubmit}>
       <span className="arrow" aria-hidden>
         ▸
       </span>
@@ -36,9 +77,15 @@ export default function CommandBar({ onFire }: CommandBarProps) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         aria-label="Carousel prompt"
+        disabled={loading}
       />
-      <button type="submit" className="fire">
-        FIRE ↗
+      <button
+        type="submit"
+        className={`fire${loading ? " fire-loading" : ""}`}
+        disabled={loading || !value.trim()}
+        aria-busy={loading}
+      >
+        {loading ? "FIRING…" : "FIRE ↗"}
       </button>
     </form>
   );

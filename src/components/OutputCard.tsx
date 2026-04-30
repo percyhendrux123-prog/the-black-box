@@ -1,49 +1,98 @@
-import type { Mode } from "../types";
+import { Fragment } from "react";
 
-interface OutputCardProps {
-  mode: Mode;
-}
+type Props = {
+  mode: "sohne" | "terminal";
+  headline?: string;
+  caption?: string;
+  eyebrow?: string;
+  loading?: boolean;
+  error?: string;
+};
+
+const DEFAULT_HEADLINE_LINES = ["It works.", "Every time."];
+const DEFAULT_CAPTION = "312 clients · 12 weeks · the data";
+const DEFAULT_EYEBROW = "— SCENE 04 / RECEIPTS";
 
 /**
- * The 4:5 OUTPUT card — the "render-here" stage.
- * For v1 the content is hardcoded to the locked mockup copy:
- *   eyebrow "— SCENE 04 / RECEIPTS"
- *   headline "It works. / Every time."
- *   caption "312 clients · 12 weeks · the data"
- *   footer "BLACK BOX // 04"  +  "v1.0 — atlas"
- *
- * In Terminal mode the headline switches to JetBrains Mono and the
- * sentence-ending periods accent in canon-gold (#C9A961).
+ * Splits a generated headline into up to two lines.
+ * Prefers an explicit "\n", then ". ", then a midpoint word break.
  */
-export default function OutputCard({ mode }: OutputCardProps) {
+function splitHeadline(h: string): [string, string] {
+  if (h.includes("\n")) {
+    const [a, ...rest] = h.split("\n");
+    return [a.trim(), rest.join(" ").trim()];
+  }
+  const periodSplit = h.match(/^(.+?\.)\s+(.+)$/);
+  if (periodSplit) return [periodSplit[1].trim(), periodSplit[2].trim()];
+  const words = h.split(/\s+/);
+  if (words.length <= 3) return [h.trim(), ""];
+  const mid = Math.ceil(words.length / 2);
+  return [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+}
+
+export default function OutputCard({
+  mode,
+  headline,
+  caption,
+  eyebrow,
+  loading = false,
+  error = "",
+}: Props) {
+  const [line1, line2] = headline
+    ? splitHeadline(headline)
+    : [DEFAULT_HEADLINE_LINES[0], DEFAULT_HEADLINE_LINES[1]];
+
+  // Error replaces eyebrow; existing card content stays.
+  const eyebrowText = error
+    ? `! ${error.toUpperCase()}`
+    : eyebrow
+      ? `— ${eyebrow.toUpperCase()}`
+      : DEFAULT_EYEBROW;
+
+  const captionText = caption || DEFAULT_CAPTION;
+
   return (
     <div className="tbb-stage">
       <div className="tbb-canvas-card">
-        <div className="tbb-eyebrow">— SCENE 04 / RECEIPTS</div>
+        <div className="tbb-eyebrow" data-error={error ? "1" : undefined}>
+          {eyebrowText}
+        </div>
+
         <div>
           <div className="tbb-headline">
             {mode === "terminal" ? (
-              <>
-                <span style={{ color: "#0a0a0a" }}>It works</span>
+              <Fragment>
+                <span style={{ color: "#0a0a0a" }}>{line1.replace(/\.$/, "")}</span>
                 <span className="accent">.</span>
-                <br />
-                <span style={{ color: "#0a0a0a" }}>Every time</span>
-                <span className="accent">.</span>
-              </>
+                {line2 && (
+                  <>
+                    <br />
+                    <span style={{ color: "#0a0a0a" }}>{line2.replace(/\.$/, "")}</span>
+                    <span className="accent">.</span>
+                  </>
+                )}
+              </Fragment>
             ) : (
-              <>
-                It works.
-                <br />
-                Every time.
-              </>
+              <Fragment>
+                {line1}
+                {line2 && (
+                  <>
+                    <br />
+                    {line2}
+                  </>
+                )}
+              </Fragment>
             )}
           </div>
-          <div className="tbb-caption">312 clients · 12 weeks · the data</div>
+          <div className="tbb-caption">{captionText}</div>
         </div>
+
         <div className="tbb-canvas-foot">
           <span>BLACK BOX // 04</span>
           <span>v1.0 — atlas</span>
         </div>
+
+        {loading && <div className="tbb-progress" aria-hidden />}
       </div>
     </div>
   );

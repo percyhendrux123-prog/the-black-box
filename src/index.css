@@ -429,3 +429,56 @@ body {
   z-index: 2;
   text-align: center;
 }
+/*
+ * BLACKOUT FIX — append to your global stylesheet (src/index.css or wherever
+ * the body { background: #050505; ... } rule lives).
+ *
+ * Cause: body is display:flex with align-items+justify-content center, and
+ * #root has only height:100% (no width). #root collapses to its content's
+ * intrinsic width — but its only child is .tbb-frame { width: 100%; aspect-ratio: 16/10 }
+ * whose interior is fully position:absolute, contributing zero intrinsic width.
+ * width:100% resolves against ~0 → frame is 0×0 → page renders only body bg (#050505).
+ *
+ * Fix: give #root an explicit width so width:100% on .tbb-frame has something
+ * to resolve against. Also add a guard min-height in case content shifts.
+ */
+
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+/* Loading pulse on the FIRE button */
+.tbb-cmd .fire-loading {
+  animation: tbb-fire-pulse 0.9s ease-in-out infinite;
+}
+@keyframes tbb-fire-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* Thin progress bar across the bottom of the OutputCard */
+.tbb-canvas-card .tbb-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #c9a961 50%,
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: tbb-progress-slide 1.2s linear infinite;
+}
+@keyframes tbb-progress-slide {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* Error styling on the eyebrow position */
+.tbb-eyebrow[data-error="1"] {
+  color: #c0392b;
+}
