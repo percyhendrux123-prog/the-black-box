@@ -26,9 +26,10 @@ export const handler: Handler = async (event) => {
     return json(405, { error: "POST only" });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
+  // look-better 2026-05-01: env rename to THE_BLACK_BOX_KEY
+  const apiKey = process.env.THE_BLACK_BOX_KEY;
   if (!apiKey) {
-    return json(500, { error: "GEMINI_API_KEY is not configured on the server" });
+    return json(500, { error: "THE_BLACK_BOX_KEY is not configured on the server" });
   }
 
   let prompt = "";
