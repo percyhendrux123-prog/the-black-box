@@ -53,7 +53,7 @@ export const handler: Handler = async (event) => {
       systemInstruction: SYSTEM,
       generationConfig: {
         temperature: 0.85,
-        maxOutputTokens: 512,
+        maxOutputTokens: 1024,
         responseMimeType: "application/json",
         responseSchema: {
           type: SchemaType.OBJECT,
