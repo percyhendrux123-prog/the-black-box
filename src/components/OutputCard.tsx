@@ -22,7 +22,9 @@ function splitHeadline(h: string): [string, string] {
     const [a, ...rest] = h.split("\n");
     return [a.trim(), rest.join(" ").trim()];
   }
-  const periodSplit = h.match(/^(.+?\.)\s+(.+)$/);
+  // look-better 2026-05-01: skip periods that are part of an initial/title
+  // (Mr., Dr., St., U., J. Smith) so headlines don't break mid-name.
+  const periodSplit = h.match(/^(.+?(?<![A-Z][a-z]?)\.)\s+(.+)$/);
   if (periodSplit) return [periodSplit[1].trim(), periodSplit[2].trim()];
   const words = h.split(/\s+/);
   if (words.length <= 3) return [h.trim(), ""];
@@ -53,7 +55,12 @@ export default function OutputCard({
 
   return (
     <div className="tbb-stage">
-      <div className="tbb-canvas-card">
+      {/* look-better 2026-05-01: announce generated copy changes for AT users */}
+      <div
+        className="tbb-canvas-card"
+        aria-live="polite"
+        aria-atomic="true"
+      >
         <div className="tbb-eyebrow" data-error={error ? "1" : undefined}>
           {eyebrowText}
         </div>

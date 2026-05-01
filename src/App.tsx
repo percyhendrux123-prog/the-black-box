@@ -72,7 +72,8 @@ function SessionClock() {
   const m = Math.floor((t % 3600) / 60);
   const s = t % 60;
   return (
-    <div className="tbb-hud" style={{ top: 32, right: 32, textAlign: "right" }}>
+    // look-better 2026-05-01: HUD positions moved to CSS modifier classes
+    <div className="tbb-hud tbb-hud--tr">
       SESSION <span className="num">{pad(h)}:{pad(m)}:{pad(s)}</span>
     </div>
   );
@@ -113,11 +114,12 @@ function Rail({ active = 4 }: { active?: number }) {
 function FootHud({ mode }: { mode: Mode }) {
   const fontLabel = mode === "terminal" ? "TERMINAL CODE" : "SOHNE BREIT EXTRAFETT";
   return (
+    // look-better 2026-05-01: HUD positions moved to CSS modifier classes
     <>
-      <div className="tbb-hud" style={{ bottom: 22, left: 28 }}>
+      <div className="tbb-hud tbb-hud--bl">
         FONT <span className="num">{fontLabel}</span>
       </div>
-      <div className="tbb-hud" style={{ bottom: 22, right: 28, textAlign: "right" }}>
+      <div className="tbb-hud tbb-hud--br">
         CANON <span className="num">ATLAS · #C9A961</span>
       </div>
     </>

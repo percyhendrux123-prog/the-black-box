@@ -130,6 +130,21 @@ body {
 .tbb-hud .num {
   color: rgba(245, 241, 232, 0.72);
 }
+/* look-better 2026-05-01: HUD position modifiers — replaces inline style props */
+.tbb-hud--tr {
+  top: 32px;
+  right: 32px;
+  text-align: right;
+}
+.tbb-hud--bl {
+  bottom: 22px;
+  left: 28px;
+}
+.tbb-hud--br {
+  bottom: 22px;
+  right: 28px;
+  text-align: right;
+}
 
 /* ── BRAND BUG ───────────────────────────────────────────────── */
 .tbb-brand {
