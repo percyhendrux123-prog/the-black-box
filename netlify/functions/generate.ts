@@ -1,5 +1,5 @@
 import type { Handler } from "@netlify/functions";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 // System prompt is locked. Don't let user prompt override it.
 const SYSTEM = `You generate short carousel slide copy.
@@ -53,8 +53,17 @@ export const handler: Handler = async (event) => {
       systemInstruction: SYSTEM,
       generationConfig: {
         temperature: 0.85,
-        maxOutputTokens: 256,
+        maxOutputTokens: 512,
         responseMimeType: "application/json",
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            headline: { type: SchemaType.STRING },
+            caption: { type: SchemaType.STRING },
+            eyebrow: { type: SchemaType.STRING },
+          },
+          required: ["headline", "caption", "eyebrow"],
+        },
       },
     });
 
