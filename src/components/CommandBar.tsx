@@ -66,12 +66,17 @@ export default function CommandBar({
   };
 
   return (
-    <form className="tbb-cmd" onSubmit={onSubmit}>
-      <span className="arrow" aria-hidden>
+    // look-better 2026-05-01: tailwind migration — command bar chrome on
+    // utilities; .fire-loading remains the animation hook in index.css.
+    <form
+      className="absolute bottom-11 left-1/2 -translate-x-1/2 w-[58%] bg-[rgba(20,18,20,0.5)] border border-canon/[0.28] rounded-[10px] py-[14px] px-[18px] flex items-center gap-3 backdrop-blur-xl backdrop-saturate-[1.8] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.6)] z-[5] [transition:background_0.25s_ease,border-color_0.25s_ease,transform_0.25s_ease]"
+      onSubmit={onSubmit}
+    >
+      <span className="font-mono text-[14px] text-canon/90" aria-hidden>
         ▸
       </span>
       <input
-        className="text"
+        className="flex-1 font-sans text-sm text-bone/[0.55] bg-transparent border-none outline-none placeholder:text-bone/[0.45]"
         type="text"
         placeholder="describe the carousel you want to make…"
         value={value}
@@ -81,7 +86,7 @@ export default function CommandBar({
       />
       <button
         type="submit"
-        className={`fire${loading ? " fire-loading" : ""}`}
+        className={`bg-canon text-[#0a0a0a] py-[6px] px-[14px] rounded-md font-mono text-[10px] tracking-[0.12em] uppercase cursor-pointer border-none [transition:background_0.18s_ease,transform_0.18s_ease] hover:bg-canon-warm hover:scale-[1.03] active:scale-[0.98]${loading ? " fire-loading" : ""}`}
         disabled={loading || !value.trim()}
         aria-busy={loading}
       >

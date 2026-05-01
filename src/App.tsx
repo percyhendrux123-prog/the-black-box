@@ -10,48 +10,84 @@ import OutputCard from "./components/OutputCard";
 
 type Mode = "sohne" | "terminal";
 
+// look-better 2026-05-01: tailwind migration — Frame chrome is utilities;
+// only the radial-gradient bg lives in .tbb-frame (index.css).
 function Frame({ mode, children }: { mode: Mode; children: ReactNode }) {
   return (
-    <div className="tbb-frame" data-mode={mode}>
+    <div
+      className="tbb-frame relative w-full max-w-[1280px] aspect-[16/10] rounded-xl overflow-hidden border border-[#1a1a1a] isolate [transition:background_0.5s_ease]"
+      data-mode={mode}
+    >
       {children}
     </div>
   );
 }
 
-const Lights = () => <div className="tbb-lights" aria-hidden />;
-const Grain = () => <div className="tbb-grain" aria-hidden />;
-const Grid = () => <div className="tbb-grid" aria-hidden />;
+// look-better 2026-05-01: tailwind migration — Lights / Grain / Grid layers
+const Lights = () => (
+  <div
+    className="tbb-lights absolute inset-0 z-[1] pointer-events-none [transition:opacity_0.5s_ease,filter_0.5s_ease]"
+    aria-hidden
+  />
+);
+const Grain = () => (
+  <div
+    className="tbb-grain absolute inset-0 z-[2] pointer-events-none opacity-[0.045] mix-blend-overlay bg-[length:240px_240px] [transition:opacity_0.5s_ease]"
+    aria-hidden
+  />
+);
+const Grid = () => (
+  <div
+    className="tbb-grid absolute inset-0 z-[3] pointer-events-none opacity-0 [transition:opacity_0.45s_ease]"
+    aria-hidden
+  />
+);
+
+// look-better 2026-05-01: tailwind migration — Whisper marquee
 const Marquee = () => (
-  <div className="tbb-marquee" aria-hidden>
+  <div
+    className="absolute left-0 right-0 top-1/2 -translate-y-1/2 pointer-events-none overflow-hidden whitespace-nowrap font-sans text-[clamp(120px,15vw,220px)] font-black leading-none tracking-[-0.04em] text-white/[0.012] uppercase select-none mix-blend-screen z-[2] text-center"
+    aria-hidden
+  >
     THE BLACK BOX
   </div>
 );
 
+// look-better 2026-05-01: tailwind migration — Brand bug
+// (.mark stays as a marker class; terminal-mode font swap targets it via
+// attribute selector in index.css.)
 function Brand({ scene = 4, total = 9 }: { scene?: number; total?: number }) {
   const pad = (n: number) => n.toString().padStart(2, "0");
   return (
-    <div className="tbb-brand">
-      <span className="mark">the black box.</span>
-      <span className="sep">·</span>
-      <span className="scn">
-        SCN <span className="num">{pad(scene)} / {pad(total)}</span>
+    <div className="absolute top-8 left-8 z-[5] flex items-baseline gap-3 leading-none">
+      <span className="mark font-sans font-extrabold text-[17px] tracking-[-0.02em] text-bone/70 [transition:font-family_0.3s_ease,font-weight_0.3s_ease,letter-spacing_0.3s_ease,font-size_0.3s_ease]">
+        the black box.
+      </span>
+      <span className="font-mono text-[11px] text-bone/[0.28]">·</span>
+      <span className="font-mono text-[11px] tracking-[0.18em] uppercase text-bone/[0.45]">
+        SCN <span className="text-bone/[0.72]">{pad(scene)} / {pad(total)}</span>
       </span>
     </div>
   );
 }
 
+// look-better 2026-05-01: tailwind migration — Mode toggle pill
 function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
+  const base =
+    "border-none px-4 py-[7px] font-mono text-[10px] tracking-[0.14em] uppercase cursor-pointer transition-all duration-200";
+  const active = "bg-canon text-[#0a0a0a]";
+  const inactive = "bg-transparent text-bone/60";
   return (
-    <div className="tbb-toggle">
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 flex bg-white/[0.035] border border-canon/[0.22] rounded-[20px] overflow-hidden backdrop-blur-[20px] backdrop-saturate-[1.8] z-[5]">
       <button
-        className={mode === "sohne" ? "on" : ""}
+        className={`${base} ${mode === "sohne" ? active : inactive}`}
         onClick={() => onChange("sohne")}
         aria-pressed={mode === "sohne"}
       >
         SOHNE BREIT
       </button>
       <button
-        className={mode === "terminal" ? "on" : ""}
+        className={`${base} ${mode === "terminal" ? active : inactive}`}
         onClick={() => onChange("terminal")}
         aria-pressed={mode === "terminal"}
       >
@@ -61,6 +97,7 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => voi
   );
 }
 
+// look-better 2026-05-01: tailwind migration — Session HUD clock
 function SessionClock() {
   const [t, setT] = useState(56537);
   useEffect(() => {
@@ -72,9 +109,8 @@ function SessionClock() {
   const m = Math.floor((t % 3600) / 60);
   const s = t % 60;
   return (
-    // look-better 2026-05-01: HUD positions moved to CSS modifier classes
-    <div className="tbb-hud tbb-hud--tr">
-      SESSION <span className="num">{pad(h)}:{pad(m)}:{pad(s)}</span>
+    <div className="absolute top-8 right-8 text-right font-mono text-[11px] tracking-[0.18em] uppercase text-bone/[0.32] z-[5]">
+      SESSION <span className="text-bone/[0.72]">{pad(h)}:{pad(m)}:{pad(s)}</span>
     </div>
   );
 }
@@ -89,38 +125,43 @@ const RAIL_TICKS = [
   { num: "07", label: "END", top: "92%" },
 ];
 
+// look-better 2026-05-01: tailwind migration — Timecode rail.
+// `.tick` and `.on` stay as marker classes for the ::after pseudo defined
+// in index.css (which grows the right-edge dash on the active tick).
 function Rail({ active = 4 }: { active?: number }) {
   return (
-    <div className="tbb-rail">
-      <div className="axis" />
+    <div className="tbb-rail absolute right-8 top-1/2 -translate-y-1/2 h-[62%] w-[130px] pointer-events-none z-[5]">
+      <div className="absolute right-0 top-0 bottom-0 w-px bg-white/10" />
       {RAIL_TICKS.map((t, i) => {
         const on = i + 1 === active;
         return (
           <div
             key={t.num}
-            className={on ? "tick on" : "tick"}
+            className={`tick${on ? " on" : ""} absolute right-0 -translate-y-1/2 font-mono text-[9px] tracking-[0.18em] uppercase pr-4 text-right w-full leading-[1.4] ${on ? "text-bone" : "text-bone/[0.32]"}`}
             style={{ top: t.top }}
           >
             {t.num}
-            <span className="label">{t.label}</span>
+            <span className={`block text-[8px] mt-[3px] tracking-[0.16em] ${on ? "text-bone/70" : "text-bone/[0.28]"}`}>
+              {t.label}
+            </span>
           </div>
         );
       })}
-      <div className="tbb-play" />
+      <div className="absolute right-0 top-1/2 w-[22px] h-px bg-flare shadow-[0_0_12px_rgba(255,84,54,0.8)] -translate-y-1/2" />
     </div>
   );
 }
 
+// look-better 2026-05-01: tailwind migration — Foot HUD
 function FootHud({ mode }: { mode: Mode }) {
   const fontLabel = mode === "terminal" ? "TERMINAL CODE" : "SOHNE BREIT EXTRAFETT";
   return (
-    // look-better 2026-05-01: HUD positions moved to CSS modifier classes
     <>
-      <div className="tbb-hud tbb-hud--bl">
-        FONT <span className="num">{fontLabel}</span>
+      <div className="absolute bottom-[22px] left-[28px] font-mono text-[11px] tracking-[0.18em] uppercase text-bone/[0.32] z-[5]">
+        FONT <span className="text-bone/[0.72]">{fontLabel}</span>
       </div>
-      <div className="tbb-hud tbb-hud--br">
-        CANON <span className="num">ATLAS · #C9A961</span>
+      <div className="absolute bottom-[22px] right-[28px] text-right font-mono text-[11px] tracking-[0.18em] uppercase text-bone/[0.32] z-[5]">
+        CANON <span className="text-bone/[0.72]">ATLAS · #C9A961</span>
       </div>
     </>
   );
