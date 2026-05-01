@@ -49,7 +49,7 @@ export const handler: Handler = async (event) => {
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-flash-latest",
       systemInstruction: SYSTEM,
       generationConfig: {
         temperature: 0.85,
