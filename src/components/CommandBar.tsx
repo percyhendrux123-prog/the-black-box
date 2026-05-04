@@ -1,16 +1,14 @@
 import { useState, FormEvent } from "react";
-
-export type GeneratedCopy = {
-  headline: string;
-  caption: string;
-  eyebrow: string;
-};
+import type { Slide } from "../types";
+import { beatsForCount } from "../types";
 
 type Props = {
-  onResult: (copy: GeneratedCopy) => void;
+  onResult: (slides: Slide[]) => void;
   onError: (msg: string) => void;
   onLoadingChange: (loading: boolean) => void;
   loading: boolean;
+  count: number;
+  beats?: readonly string[];
 };
 
 export default function CommandBar({
@@ -18,6 +16,8 @@ export default function CommandBar({
   onError,
   onLoadingChange,
   loading,
+  count,
+  beats,
 }: Props) {
   const [value, setValue] = useState("");
 
@@ -28,11 +28,13 @@ export default function CommandBar({
     onLoadingChange(true);
     onError("");
 
+    const finalBeats = beats && beats.length > 0 ? [...beats] : [...beatsForCount(count)];
+
     try {
       const res = await fetch("/.netlify/functions/generate", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, count, beats: finalBeats }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -42,16 +44,38 @@ export default function CommandBar({
         return;
       }
 
-      if (!data?.headline || !data?.caption || !data?.eyebrow) {
+      if (!Array.isArray(data?.slides) || data.slides.length === 0) {
         onError("Bad response shape");
         return;
       }
 
-      onResult({
-        headline: String(data.headline),
-        caption: String(data.caption),
-        eyebrow: String(data.eyebrow),
-      });
+      const valid = data.slides.every(
+        (s: unknown) =>
+          typeof s === "object" &&
+          s !== null &&
+          typeof (s as Slide).beat === "string" &&
+          (s as Slide).beat.length > 0 &&
+          typeof (s as Slide).headline === "string" &&
+          (s as Slide).headline.length > 0 &&
+          typeof (s as Slide).caption === "string" &&
+          (s as Slide).caption.length > 0 &&
+          typeof (s as Slide).eyebrow === "string" &&
+          (s as Slide).eyebrow.length > 0,
+      );
+
+      if (!valid) {
+        onError("Bad response shape");
+        return;
+      }
+
+      const slides: Slide[] = data.slides.map((s: Slide) => ({
+        beat: String(s.beat),
+        headline: String(s.headline),
+        caption: String(s.caption),
+        eyebrow: String(s.eyebrow),
+      }));
+
+      onResult(slides);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Network error";
       onError(msg);

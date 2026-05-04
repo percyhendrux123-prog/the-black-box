@@ -1,14 +1,15 @@
 import { useState, useEffect, ReactNode } from "react";
-import CommandBar, { GeneratedCopy } from "./components/CommandBar";
+import CommandBar from "./components/CommandBar";
 import OutputCard from "./components/OutputCard";
+import SlideNav from "./components/SlideNav";
+import type { Mode, Slide } from "./types";
+import { beatsForCount } from "./types";
 
 // ──────────────────────────────────────────────────────────────────────
 // Layout primitives — keep these inline; they match the existing
 // minified bundle 1:1 (Td/Ld/jd/Rd/Od/Md/Id/Dd/Ad/Vd) so the rest of
 // the visual system keeps working unchanged.
 // ──────────────────────────────────────────────────────────────────────
-
-type Mode = "sohne" | "terminal";
 
 // look-better 2026-05-01: tailwind migration — Frame chrome is utilities;
 // only the radial-gradient bg lives in .tbb-frame (index.css).
@@ -78,7 +79,7 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => voi
   const active = "bg-canon text-[#0a0a0a]";
   const inactive = "bg-transparent text-bone/60";
   return (
-    <div className="absolute top-8 left-1/2 -translate-x-1/2 flex bg-white/[0.035] border border-canon/[0.22] rounded-[20px] overflow-hidden backdrop-blur-[20px] backdrop-saturate-[1.8] z-[5]">
+    <div className="flex bg-white/[0.035] border border-canon/[0.22] rounded-[20px] overflow-hidden backdrop-blur-[20px] backdrop-saturate-[1.8]">
       <button
         className={`${base} ${mode === "sohne" ? active : inactive}`}
         onClick={() => onChange("sohne")}
@@ -93,6 +94,51 @@ function ModeToggle({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => voi
       >
         TERMINAL
       </button>
+    </div>
+  );
+}
+
+// New: count toggle pill — 5 / 7 / 10. Matches ModeToggle styling.
+function CountToggle({ count, onChange }: { count: number; onChange: (n: number) => void }) {
+  const base =
+    "border-none px-4 py-[7px] font-mono text-[10px] tracking-[0.14em] uppercase cursor-pointer transition-all duration-200";
+  const active = "bg-canon text-[#0a0a0a]";
+  const inactive = "bg-transparent text-bone/60";
+  const opts = [5, 7, 10] as const;
+  return (
+    <div className="flex bg-white/[0.035] border border-canon/[0.22] rounded-[20px] overflow-hidden backdrop-blur-[20px] backdrop-saturate-[1.8]">
+      {opts.map((n) => (
+        <button
+          key={n}
+          className={`${base} ${count === n ? active : inactive}`}
+          onClick={() => onChange(n)}
+          aria-pressed={count === n}
+          aria-label={`${n} slides`}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Wraps ModeToggle + CountToggle into a single centered top cluster so
+// both pills sit on the top edge without overlapping the brand bug.
+function TopControls({
+  mode,
+  onModeChange,
+  count,
+  onCountChange,
+}: {
+  mode: Mode;
+  onModeChange: (m: Mode) => void;
+  count: number;
+  onCountChange: (n: number) => void;
+}) {
+  return (
+    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[5] flex items-center gap-3">
+      <ModeToggle mode={mode} onChange={onModeChange} />
+      <CountToggle count={count} onChange={onCountChange} />
     </div>
   );
 }
@@ -115,39 +161,54 @@ function SessionClock() {
   );
 }
 
-const RAIL_TICKS = [
-  { num: "01", label: "HOOK", top: "8%" },
-  { num: "02", label: "PROBLEM", top: "22%" },
-  { num: "03", label: "METHOD", top: "36%" },
-  { num: "04", label: "RECEIPTS", top: "50%" },
-  { num: "05", label: "SYSTEM", top: "64%" },
-  { num: "06", label: "CTA", top: "78%" },
-  { num: "07", label: "END", top: "92%" },
-];
-
 // look-better 2026-05-01: tailwind migration — Timecode rail.
 // `.tick` and `.on` stay as marker classes for the ::after pseudo defined
 // in index.css (which grows the right-edge dash on the active tick).
-function Rail({ active = 4 }: { active?: number }) {
+//
+// New: rail is now parametric — it accepts `beats` + `activeBeat` and
+// interpolates tick top% evenly between 8% and 92%. The flare cap chases
+// the active tick with a 0.25s ease.
+function Rail({
+  beats,
+  activeBeat,
+}: {
+  beats: readonly string[];
+  activeBeat: string;
+}) {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const n = beats.length;
+  const top = (i: number) => {
+    if (n <= 1) return 50;
+    return 8 + ((92 - 8) * i) / (n - 1);
+  };
+  const activeIdx = Math.max(
+    0,
+    beats.findIndex((b) => b === activeBeat),
+  );
+  const flareTop = beats.length > 0 ? top(activeIdx) : 50;
   return (
     <div className="tbb-rail absolute right-8 top-1/2 -translate-y-1/2 h-[62%] w-[130px] pointer-events-none z-[5]">
       <div className="absolute right-0 top-0 bottom-0 w-px bg-white/10" />
-      {RAIL_TICKS.map((t, i) => {
-        const on = i + 1 === active;
+      {beats.map((label, i) => {
+        const on = i === activeIdx;
+        const num = pad(i + 1);
         return (
           <div
-            key={t.num}
+            key={`${num}-${label}`}
             className={`tick${on ? " on" : ""} absolute right-0 -translate-y-1/2 font-mono text-[9px] tracking-[0.18em] uppercase pr-4 text-right w-full leading-[1.4] ${on ? "text-bone" : "text-bone/[0.32]"}`}
-            style={{ top: t.top }}
+            style={{ top: `${top(i)}%` }}
           >
-            {t.num}
+            {num}
             <span className={`block text-[8px] mt-[3px] tracking-[0.16em] ${on ? "text-bone/70" : "text-bone/[0.28]"}`}>
-              {t.label}
+              {label}
             </span>
           </div>
         );
       })}
-      <div className="absolute right-0 top-1/2 w-[22px] h-px bg-flare shadow-[0_0_12px_rgba(255,84,54,0.8)] -translate-y-1/2" />
+      <div
+        className="absolute right-0 w-[22px] h-px bg-flare shadow-[0_0_12px_rgba(255,84,54,0.8)] -translate-y-1/2 [transition:top_0.25s_ease]"
+        style={{ top: `${flareTop}%` }}
+      />
     </div>
   );
 }
@@ -173,9 +234,41 @@ function FootHud({ mode }: { mode: Mode }) {
 
 export default function App() {
   const [mode, setMode] = useState<Mode>("sohne");
-  const [copy, setCopy] = useState<GeneratedCopy | null>(null);
+  const [count, setCount] = useState<number>(5);
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const beats = beatsForCount(count);
+
+  const activeBeat =
+    slides.length > 0 && currentIndex < slides.length
+      ? slides[currentIndex].beat
+      : beats[0] ?? "";
+
+  const sceneNum = slides.length > 0 ? currentIndex + 1 : 0;
+  const totalNum = slides.length;
+
+  const handleCountChange = (n: number) => {
+    if (n === count) return;
+    setCount(n);
+    // Changing count invalidates the prior carousel — it was generated
+    // for a different beat list.
+    setSlides([]);
+    setCurrentIndex(0);
+    setError("");
+  };
+
+  const handleResult = (next: Slide[]) => {
+    setSlides(next);
+    setCurrentIndex(0);
+    setError("");
+  };
+
+  const goPrev = () => setCurrentIndex((i) => Math.max(0, i - 1));
+  const goNext = () =>
+    setCurrentIndex((i) => Math.min(slides.length - 1, i + 1));
 
   return (
     <Frame mode={mode}>
@@ -183,26 +276,35 @@ export default function App() {
       <Grain />
       <Grid />
       <Marquee />
-      <Brand scene={4} total={9} />
-      <ModeToggle mode={mode} onChange={setMode} />
+      <Brand scene={sceneNum} total={totalNum} />
+      <TopControls
+        mode={mode}
+        onModeChange={setMode}
+        count={count}
+        onCountChange={handleCountChange}
+      />
       <SessionClock />
       <OutputCard
         mode={mode}
-        headline={copy?.headline}
-        caption={copy?.caption}
-        eyebrow={copy?.eyebrow}
+        slides={slides}
+        currentIndex={currentIndex}
         loading={loading}
         error={error}
       />
-      <Rail active={4} />
+      <Rail beats={beats} activeBeat={activeBeat} />
+      <SlideNav
+        current={currentIndex}
+        total={slides.length}
+        onPrev={goPrev}
+        onNext={goNext}
+      />
       <CommandBar
-        onResult={(c) => {
-          setCopy(c);
-          setError("");
-        }}
+        onResult={handleResult}
         onError={setError}
         onLoadingChange={setLoading}
         loading={loading}
+        count={count}
+        beats={beats}
       />
       <FootHud mode={mode} />
     </Frame>

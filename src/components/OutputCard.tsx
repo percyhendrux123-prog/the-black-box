@@ -1,12 +1,12 @@
 import { Fragment } from "react";
+import type { Mode, Slide } from "../types";
 
 type Props = {
-  mode: "sohne" | "terminal";
-  headline?: string;
-  caption?: string;
-  eyebrow?: string;
-  loading?: boolean;
-  error?: string;
+  mode: Mode;
+  slides: Slide[];
+  currentIndex: number;
+  loading: boolean;
+  error: string;
 };
 
 const DEFAULT_HEADLINE_LINES = ["It works.", "Every time."];
@@ -34,24 +34,26 @@ function splitHeadline(h: string): [string, string] {
 
 export default function OutputCard({
   mode,
-  headline,
-  caption,
-  eyebrow,
-  loading = false,
-  error = "",
+  slides,
+  currentIndex,
+  loading,
+  error,
 }: Props) {
-  const [line1, line2] = headline
-    ? splitHeadline(headline)
+  const slide: Slide | undefined =
+    slides.length > 0 ? slides[Math.min(Math.max(currentIndex, 0), slides.length - 1)] : undefined;
+
+  const [line1, line2] = slide
+    ? splitHeadline(slide.headline)
     : [DEFAULT_HEADLINE_LINES[0], DEFAULT_HEADLINE_LINES[1]];
 
   // Error replaces eyebrow; existing card content stays.
   const eyebrowText = error
     ? `! ${error.toUpperCase()}`
-    : eyebrow
-      ? `— ${eyebrow.toUpperCase()}`
+    : slide
+      ? `— ${slide.eyebrow.toUpperCase()}`
       : DEFAULT_EYEBROW;
 
-  const captionText = caption || DEFAULT_CAPTION;
+  const captionText = slide ? slide.caption : DEFAULT_CAPTION;
 
   return (
     // look-better 2026-05-01: tailwind migration — stage + card chrome on
